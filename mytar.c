@@ -1,50 +1,53 @@
 #include <stdio.h>
 #include <stdlib.h>
+/*#include <arpa/inet.h>*/
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+/*#include <tar.h>*/
 #include <fcntl.h>
 #include <dirent.h>
+#define setc 0x10
+#define sett 0x8
+#define setx 0x4
+#define setv 0x2
+#define setS 0x1
 
-#define BUFFER 2048
+void handle_args(int, char **, int *);
 
-/*My functions*/
-int main(int argc,char *argv[])
-{
-    /*Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]*/
-    char command = argv[1];
-
-    printf("comment");
-
-    switch(command) {
-        case 'c' :
-            /*c: create an archive*/
-            printf("Excellent!\n" );
-            break;
-        case 't' :
-            /*t: print the table of contents of an archive*/
-            break;
-        case 'x' :
-            /*x: extract the contents of an archive*/
-            break;
-        case 'v' :
-            /*v: increases verbosity*/
-            break;
-        case 'f' :
-            /*f: specifies archive filename*/
-            break;
-        case 'S' :
-            /*S:*/
-            break;
-        default :
-            perror("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]");
-            exit(-1);
-   }
+int main(int argc,char *argv[]){
+    int opt = 1;
+    
+    handle_args(argc, argv, &opt);
+    printf("%d\n", opt);
 
     return 0;
 }
 
-void createArchive(){
-
+    /* strchr to determine which options are input
+     * strchr for f, exit otherwise
+     * if */
+void handle_args(int argc, char **argv, int* opt) {
+    if ((argc < 3)) {
+        printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
+        exit(-1);
+    }
+    else if (strchr(argv[1], (int) 'f') == NULL) {
+        printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
+        exit(-1);
+    }
+    else {
+        if (strchr(argv[1], (int) 'c') == NULL)
+            *opt |= setc;
+        if (strchr(argv[1], (int) 't') == NULL)
+            *opt |= sett;
+        if (strchr(argv[1], (int) 'x') == NULL)
+            *opt |= setx;
+        if (strchr(argv[1], (int) 'v') == NULL)
+            *opt |= setv;
+        if (strchr(argv[1], (int) 'S') == NULL)
+            *opt |= setS;
+    }
 }
