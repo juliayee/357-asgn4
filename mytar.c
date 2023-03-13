@@ -15,6 +15,8 @@ int main(int argc,char *argv[])
     /*Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]*/
     char command = argv[1];
 
+    printf("comment");
+
     switch(command) {
         case 'c' :
             /*c: create an archive*/
