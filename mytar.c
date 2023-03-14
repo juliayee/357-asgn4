@@ -10,12 +10,6 @@
 #include <fcntl.h>
 #include <dirent.h>
 
-#define setc 0x10
-#define sett 0x8
-#define setx 0x4
-#define setv 0x2
-#define setS 0x1
-
 #define BLOCKSIZE 512
 
 /*OFFSETS*/
@@ -54,51 +48,60 @@
 #define LEN_DEVMINOR 8
 #define LEN_PREFIX 155
 
+typedef struct tarinfo *tarinfoptr;
 typedef struct tarinfo {
-    char* files; /*list of files*/
+    char** files; /*list of files*/
     int numFiles; /*number of files*/
-    char tarName[];
+    char *tarName;
 } TarInfo;
 
-void handle_args(int, char **, int *);
+tarinfoptr handle_args(int, char **, char **);
 
 int main(int argc,char *argv[]){
-    int opt = 0;
-    
-    handle_args(argc, argv, &opt);
-    printf("%d\n", opt);
+    char *options;
+    tarinfoptr ti;
+
+    ti = handle_args(argc, argv, &options);
+    printf("%s\n", options);
+    printf("%s\n", ti->tarName);
 
     return 0;
 }
 
-    /* strchr to determine which options are input
-     * strchr for f and check that there's enough valid, exit otherwise */
-void handle_args(int argc, char **argv, int* opt) {
+    /*strchr for f & check that there's enough valid args, exit otherwise; 
+    init tarinfoptr*/
+tarinfoptr handle_args(int argc, char **argv, char **opt) {
+    char *cin, *tin, *xin;
+    tarinfoptr ti = (tarinfoptr) malloc(sizeof(TarInfo));
+
     if ((argc < 3)) {
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
         exit(-1);
     }
-    else if (strchr(argv[1], (int) 'f') == NULL) {
+    
+    *opt = argv[1];
+    if (strchr(argv[1], (int) 'f') == NULL) {
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
         exit(-1);
     }
     else {
-        if (strchr(argv[1], (int) 'c') != NULL)
-            *opt |= setc;
-        if (strchr(argv[1], (int) 't') != NULL)
-            *opt |= sett;
-        if (strchr(argv[1], (int) 'x') != NULL)
-            *opt |= setx;
-        if (strchr(argv[1], (int) 'v') != NULL)
-            *opt |= setv;
-        if (strchr(argv[1], (int) 'S') != NULL)
-            *opt |= setS;
+        cin = strchr(argv[1], (int) 'c');
+        tin = strchr(argv[1], (int) 't');
+        xin = strchr(argv[1], (int) 'x');
+
+        /* check if opt contains c,t,or x */
+        if ((cin == NULL) && (tin == NULL) && (xin == NULL)) { 
+            printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
+            printf("[ctxvS]f must include c, t, or x\n");
+            exit(-1);    
+        }
+
+        ti->files = list_files(argc, argv);
+        ti->numFiles = 1;
+        ti->tarName = argv[2];
     }
-    if (*opt < setx) { /* doesn't include c, t, or x */
-        printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
-        printf("[ctxvS]f must include c, t, or x\n");
-        exit(-1);    
-    }
+    
+    return ti;
 }
 
 /*-------------------------------Given functions for 
