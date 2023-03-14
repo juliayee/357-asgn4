@@ -9,11 +9,13 @@
 /*#include <tar.h>*/
 #include <fcntl.h>
 #include <dirent.h>
+
 #define setc 0x10
 #define sett 0x8
 #define setx 0x4
 #define setv 0x2
 #define setS 0x1
+#define BLOCKSIZE 512
 
 void handle_args(int, char **, int *);
 
