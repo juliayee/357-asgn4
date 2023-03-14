@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -pedantic -ansi -g
 CTEST = -Wall -pedantic -g -D TEST
-NAME = mytat
+NAME = mytar
 
 all: $(NAME) $(NAME)test
 
