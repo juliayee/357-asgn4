@@ -54,6 +54,12 @@
 #define LEN_DEVMINOR 8
 #define LEN_PREFIX 155
 
+typedef struct tarinfo {
+    char* files; /*list of files*/
+    int numFiles; /*number of files*/
+    char tarName[];
+} TarInfo;
+
 void handle_args(int, char **, int *);
 
 int main(int argc,char *argv[]){
@@ -91,7 +97,8 @@ void handle_args(int argc, char **argv, int* opt) {
     if (*opt < setx) { /* doesn't include c, t, or x */
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
         printf("[ctxvS]f must include c, t, or x\n");
-        exit(-1);    }
+        exit(-1);    
+    }
 }
 
 /*-------------------------------Given functions for 
