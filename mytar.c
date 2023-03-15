@@ -60,11 +60,20 @@ tarinfoptr handle_args(int, char **, char **);
 int main(int argc,char *argv[]){
     char *options;
     tarinfoptr ti;
+    char case; 
+
+    int i = 0;
 
     ti = handle_args(argc, argv, &options);
     printf("%s\n", options);
     printf("%s\n", ti->tarName);
 
+    for(i = 0; i < strlen(options); i++ ){
+        case = options
+        switch(case)
+    }
+
+    free(ti);
     return 0;
 }
 
@@ -80,6 +89,7 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
     }
     
     *opt = argv[1];
+    /*Check if f is included*/
     if (strchr(argv[1], (int) 'f') == NULL) {
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
         exit(-1);
@@ -102,6 +112,10 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
     }
     
     return ti;
+}
+
+void create(tarinfoptr tar){
+
 }
 
 /*-------------------------------Given functions for 
