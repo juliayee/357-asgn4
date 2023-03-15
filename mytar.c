@@ -60,16 +60,21 @@ tarinfoptr handle_args(int, char **, char **);
 int main(int argc,char *argv[]){
     char *options;
     tarinfoptr ti;
+    int i;
 
     ti = handle_args(argc, argv, &options);
-    printf("%s\n", options);
-    printf("%s\n", ti->tarName);
+    printf("options: %s\n", options);
+    printf("tarName:\n");
+    for (i = 0; i < sizeof(ti->files)/sizeof(char *); i++)
+        printf("\n", ti->files[i]);
+    printf("tarName: %d\n", ti->numFiles);
+    printf("tarName: %s\n", ti->tarName);
 
     return 0;
 }
 
-    /*strchr for f & check that there's enough valid args, exit otherwise; 
-    init tarinfoptr*/
+/*strchr for f & check that there's enough valid args, exit otherwise; 
+init tarinfoptr*/
 tarinfoptr handle_args(int argc, char **argv, char **opt) {
     char *cin, *tin, *xin;
     tarinfoptr ti = (tarinfoptr) malloc(sizeof(TarInfo));
@@ -102,6 +107,10 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
     }
     
     return ti;
+}
+
+char **list_files(int argc, char **argv) {
+    a;
 }
 
 /*-------------------------------Given functions for 
