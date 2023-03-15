@@ -70,11 +70,6 @@ int main(int argc,char *argv[]){
     printf("tarName: %d\n", ti->numFiles);
     printf("tarName: %s\n", ti->tarName);
 
-    for(i = 0; i < strlen(options); i++ ){
-        case = options
-        switch(case)
-    }
-
     free(ti);
     return 0;
 }
@@ -117,7 +112,7 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
 }
 
 char **list_files(int argc, char **argv) {
-    a;
+    int a = 0;
 }
 
 /*-------------------------------Given functions for 
