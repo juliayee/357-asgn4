@@ -87,6 +87,7 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
     }
     
     *opt = argv[1];
+    /*Check if f is included*/
     if (strchr(argv[1], (int) 'f') == NULL) {
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
         exit(-1);
