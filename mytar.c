@@ -9,8 +9,7 @@
 /*#include <tar.h>*/
 #include <fcntl.h>
 #include <dirent.h>
-
-#define BLOCKSIZE 512
+#define BUFFSIZE 10
 
 /*OFFSETS*/
 #define OFF_NAME 0
@@ -56,6 +55,7 @@ typedef struct tarinfo {
 } TarInfo;
 
 tarinfoptr handle_args(int, char **, char **);
+char **list_files(int, char **);
 
 int main(int argc,char *argv[]){
     char *options;
@@ -64,12 +64,14 @@ int main(int argc,char *argv[]){
 
     ti = handle_args(argc, argv, &options);
     printf("options: %s\n", options);
-    printf("tarName:\n");
-    for (i = 0; i < sizeof(ti->files)/sizeof(char *); i++)
-        printf("\n", ti->files[i]);
-    printf("tarName: %d\n", ti->numFiles);
-    printf("tarName: %s\n", ti->tarName);
+    printf("files:\n");
+    for (i = 0; i < ti->numFiles; i++)
+        printf("\t%s\n", ti->files[i]);
+    printf("numFiles: %d\n", ti->numFiles);
+    printf("tar Name: %s\n", ti->tarName);
 
+    free(ti->files);
+    free(ti);
     return 0;
 }
 
@@ -102,7 +104,7 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
         }
 
         ti->files = list_files(argc, argv);
-        ti->numFiles = 1;
+        ti->numFiles = argc - 3;
         ti->tarName = argv[2];
     }
     
@@ -110,7 +112,23 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
 }
 
 char **list_files(int argc, char **argv) {
-    a;
+    int i;
+    size_t count = 0, size = 0;
+    char **files = NULL;
+    for (i = 3; i < (argc); i++) {
+        count += 1;
+        if (count >= size) {
+            size += BUFFSIZE;
+            files = realloc(files, size*sizeof(char *));
+            if (files == NULL) {
+                perror("list_files");
+                exit(-1);
+            }
+        }
+        *(files + count - 1) = argv[i];
+    }
+
+    return files;
 }
 
 /*-------------------------------Given functions for 
