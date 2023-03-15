@@ -52,6 +52,7 @@ typedef struct tarinfo *tarinfoptr;
 typedef struct tarinfo {
     char** files; /*list of files*/
     int numFiles; /*number of files*/
+    int headers; /*number of headers in tar*/
     char *tarName;
 } TarInfo;
 
@@ -113,6 +114,43 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
 
 char **list_files(int argc, char **argv) {
     int a = 0;
+}
+
+void create(tarinfoptr ti){
+    int nums = ti->numFiles;
+    int i = 0;
+    int comp;
+    char buff[500];
+    /*Open every directory passed through args*/
+    for(i = 0; i < nums; i++){
+        /*if dir not null*/
+        if(ti->files[i]){
+            comp = strcmp(*(ti->files[i]), "/");
+            if(comp == 0){
+                /*is a slash*/
+                /*copy into buffer*/
+                /*create a directory*/
+            }
+            else{
+                /*store file name in buffer*/
+                /*add slash*/
+
+            }
+        }
+        else{
+            /*create a file, dir is null*/
+        }
+    }
+
+}
+
+void createFile(){
+    /*open file*/
+    /*create header*/
+    /*write header to file*/
+    /*incr num headers*/
+    /*write the contents of file*/
+    /*close file*/
 }
 
 /*-------------------------------Given functions for 
