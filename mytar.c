@@ -51,8 +51,28 @@ typedef struct tarinfo *tarinfoptr;
 typedef struct tarinfo {
     char** files; /*list of files*/
     int numFiles; /*number of files*/
+    int headers; /*number of headers in tar*/
     char *tarName;
 } TarInfo;
+
+typedef struct tarHeader{
+    char name[LEN_NAME + 1];
+    mode_t mode;
+    uid_t uid;
+    gid_t gid;
+    size_t size;
+    time_t mtime;
+    int chksum;
+    char typeflag;
+    char linkname[LEN_LINKNAME + 1];
+    char magic[LEN_MAGIC];
+    char version[LEN_VERSION + 1];
+    char uname[LEN_UNAME];
+    char gname[LEN_GNAME];
+    int devmajor;
+    int devminor;
+    char prefix[LEN_PREFIX + 1];
+}
 
 tarinfoptr handle_args(int, char **, char **);
 char **list_files(int, char **);
@@ -160,6 +180,46 @@ char **list_files(int argc, char **argv) {
     }
 
     return files;
+}
+
+void create(tarinfoptr ti){
+    int nums = ti->numFiles;
+    int i = 0;
+    int comp;
+    char buff[500];
+    int ftd = -1;
+    /*Open every directory passed through args*/
+    for(i = 0; i < nums; i++){
+        /*if dir not null*/
+        if(ti->files[i]){
+            comp = strcmp(*(ti->files[i]), "/");
+            if(comp == 0){
+                /*is a slash*/
+                /*copy into buffer*/
+                strcpy(buff, ti->files[i]);
+                /*create a directory*/
+                
+            }
+            else{
+                /*store file name in buffer*/
+                /*add slash*/
+
+            }
+        }
+        else{
+            /*create a file, dir is null*/
+        }
+    }
+
+}
+
+void createFile(){
+    /*open file*/
+    /*create header*/
+    /*write header to file*/
+    /*incr num headers*/
+    /*write the contents of file*/
+    /*close file*/
 }
 
 /*-------------------------------Given functions for 
