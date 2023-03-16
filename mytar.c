@@ -72,17 +72,18 @@ typedef struct tarHeader{
     int devmajor;
     int devminor;
     char prefix[LEN_PREFIX + 1];
-}
+};
 
-tarinfoptr handle_args(int, char **, char **);
+tarinfoptr handle_args(int, char **, char **, int[]);
 char **list_files(int, char **);
 
 int main(int argc,char *argv[]){
-    char **options;
+    char *options;
+    int vs[1] = {0, 0};
     tarinfoptr ti;
     int i;
 
-    ti = handle_args(argc, argv, &options);
+    ti = handle_args(argc, argv, &options, vs);
 
     #ifdef TEST
         printf("options: %s\n", options);
@@ -93,26 +94,21 @@ int main(int argc,char *argv[]){
         printf("tar Name: %s\n", ti->tarName);
     #endif
 
-    for (i = 0; *options[i] != '\0'; i++) {
-        switch((*options)[i]) {
+    for (i = 0; i < strlen(options); i++) {
+        switch((options)[i]) {
             case 'c':
                 /*call creat funcs*/
+                printf("c\n");
                 break;
             
             case 't':
                 /*list funcs*/
+                printf("t\n");                
                 break;
 
             case 'x':
                 /*extract funcs*/
-                break;
-
-            case 'v':
-                /*extract funcs*/
-                break;
-
-            case 'S':
-                /*extract funcs*/
+                printf("x\n");
                 break;
 
             default:
@@ -127,7 +123,7 @@ int main(int argc,char *argv[]){
 
 /*strchr for f & check that there's enough valid args, exit otherwise; 
 init tarinfoptr*/
-tarinfoptr handle_args(int argc, char **argv, char **opt) {
+tarinfoptr handle_args(int argc, char **argv, char **opt, int vs[]) {
     char *cin, *tin, *xin;
     tarinfoptr ti = (tarinfoptr) malloc(sizeof(TarInfo));
 
@@ -154,6 +150,12 @@ tarinfoptr handle_args(int argc, char **argv, char **opt) {
             exit(-1);    
         }
 
+        /* check if v or S are in opt */
+        if (strchr(argv[1], (int) 'v') != NULL)
+            vs[0] = 1;
+        if (strchr(argv[1], (int) 'S') != NULL)
+            vs[1] = 1;
+        
         ti->files = list_files(argc, argv);
         ti->numFiles = argc - 3;
         ti->tarName = argv[2];
