@@ -55,6 +55,25 @@ typedef struct tarinfo {
     char *tarName;
 } TarInfo;
 
+typedef struct tarHeader{
+    char name[LEN_NAME + 1];
+    mode_t mode;
+    uid_t uid;
+    gid_t gid;
+    size_t size;
+    time_t mtime;
+    int chksum;
+    char typeflag;
+    char linkname[LEN_LINKNAME + 1];
+    char magic[LEN_MAGIC];
+    char version[LEN_VERSION + 1];
+    char uname[LEN_UNAME];
+    char gname[LEN_GNAME];
+    int devmajor;
+    int devminor;
+    char prefix[LEN_PREFIX + 1];
+}
+
 tarinfoptr handle_args(int, char **, char **);
 char **list_files(int, char **);
 
@@ -146,6 +165,7 @@ void create(tarinfoptr ti){
             if(comp == 0){
                 /*is a slash*/
                 /*copy into buffer*/
+                strcpy(buff, ti->files[i]);
                 /*create a directory*/
             }
             else{
