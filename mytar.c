@@ -58,17 +58,47 @@ tarinfoptr handle_args(int, char **, char **);
 char **list_files(int, char **);
 
 int main(int argc,char *argv[]){
-    char *options;
+    char **options;
     tarinfoptr ti;
     int i;
 
     ti = handle_args(argc, argv, &options);
-    printf("options: %s\n", options);
-    printf("files:\n");
-    for (i = 0; i < ti->numFiles; i++)
-        printf("\t%s\n", ti->files[i]);
-    printf("numFiles: %d\n", ti->numFiles);
-    printf("tar Name: %s\n", ti->tarName);
+
+    #ifdef TEST
+        printf("options: %s\n", options);
+        printf("files:\n");
+        for (i = 0; i < ti->numFiles; i++)
+            printf("\t%s\n", ti->files[i]);
+        printf("numFiles: %d\n", ti->numFiles);
+        printf("tar Name: %s\n", ti->tarName);
+    #endif
+
+    for (i = 0; *options[i] != '\0'; i++) {
+        switch((*options)[i]) {
+            case 'c':
+                /*call creat funcs*/
+                break;
+            
+            case 't':
+                /*list funcs*/
+                break;
+
+            case 'x':
+                /*extract funcs*/
+                break;
+
+            case 'v':
+                /*extract funcs*/
+                break;
+
+            case 'S':
+                /*extract funcs*/
+                break;
+
+            default:
+                break;
+        }
+    }
 
     free(ti->files);
     free(ti);
