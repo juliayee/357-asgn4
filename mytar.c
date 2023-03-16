@@ -157,6 +157,7 @@ void create(tarinfoptr ti){
     int i = 0;
     int comp;
     char buff[500];
+    int ftd = -1;
     /*Open every directory passed through args*/
     for(i = 0; i < nums; i++){
         /*if dir not null*/
@@ -167,6 +168,7 @@ void create(tarinfoptr ti){
                 /*copy into buffer*/
                 strcpy(buff, ti->files[i]);
                 /*create a directory*/
+                
             }
             else{
                 /*store file name in buffer*/
