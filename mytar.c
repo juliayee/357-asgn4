@@ -76,6 +76,7 @@ typedef struct tarHeader{
 
 tarinfoptr handle_args(int, char **, char **, int[]);
 char **list_files(int, char **);
+void listA(tarinfo);
 
 int main(int argc,char *argv[]){
     char *options;
@@ -121,8 +122,6 @@ int main(int argc,char *argv[]){
     return 0;
 }
 
-/*strchr for f & check that there's enough valid args, exit otherwise; 
-init tarinfoptr*/
 tarinfoptr handle_args(int argc, char **argv, char **opt, int vs[]) {
     char *cin, *tin, *xin;
     tarinfoptr ti = (tarinfoptr) malloc(sizeof(TarInfo));
@@ -215,6 +214,7 @@ void create(tarinfoptr ti){
 
 }
 
+/* ----------------------------- CREATE START ----------------------------- */
 void createFile(){
     /*open file*/
     /*create header*/
@@ -270,4 +270,9 @@ int insert_special_int(char *where, size_t size, int32_t val) {
         *where |= 0x80; /* set that high–order bit */
     }
     return err;
+}
+/* ------------------------------ CREATE END ------------------------------ */
+
+void listA(tarinfoptr *tar) {
+    
 }
