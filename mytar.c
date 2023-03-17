@@ -253,7 +253,7 @@ int insert_special_int(char *where, size_t size, int32_t val) {
         * done.
         */
         err++;
-    } else {git 
+    } else {
         /* game on....*/
         memset(where, 0, size); /* Clear out the buffer */
         *(int32_t *)(where+size−sizeof(val)) = htonl(val); /* place the int */
@@ -264,5 +264,5 @@ int insert_special_int(char *where, size_t size, int32_t val) {
 /* ------------------------------ CREATE END ------------------------------ */
 
 void listA(TarPtr *tar) {
-
+    
 }
