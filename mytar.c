@@ -80,10 +80,10 @@ typedef struct tarHeader{
     char prefix[LEN_PREFIX + 1];
 } TarHeader; 
 
-
 /*---MY FUNCTIONS---*/
 TarPtr handle_args(int, char *[], char *[], int[]);
-char **list_files(int, char **);
+void fill_files(int, char **, TarPtr);
+void listA(tar);
 
 int main(int argc,char *argv[]){
     char *options;
@@ -125,13 +125,10 @@ int main(int argc,char *argv[]){
         }
     }
 
-    free(ti->files);
     free(ti);
     return 0;
 }
 
-/*strchr for f & check that there's enough valid args, exit otherwise; 
-init tarinfoptr*/
 TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
     char *cin, *tin, *xin;
     TarPtr ti = (TarPtr) malloc(sizeof(Tar));
@@ -165,7 +162,7 @@ TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
         if (strchr(argv[1], (int) 'S') != NULL)
             vs[S] = 1;
         
-        ti->files = list_files(argc, argv);
+        fill_files(argc, argv, ti);
         ti->numFiles = argc - 3;
         ti->tarName = argv[2];
     }
@@ -173,24 +170,11 @@ TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
     return ti;
 }
 
-char **list_files(int argc, char **argv) {
+void fill_files(int argc, char **argv, TarPtr ti) {
     int i;
-    size_t count = 0, size = 0;
-    char *files[FILES] = NULL;
-    for (i = 3; i < (argc); i++) {
-        count += 1;
-        if (count >= size) {
-            size += BUFFSIZE;
-            files = realloc(files, size*sizeof(char *));
-            if (files == NULL) {
-                perror("list_files");
-                exit(-1);
-            }
-        }
-        *(files + count - 1) = argv[i];
+    for (i = 0; i + 3 < (argc); i++) {
+        ti->files[i] = argv[i + 3];
     }
-
-    return files;
 }
 
 void create(TarPtr ti, int *vs){
@@ -301,4 +285,9 @@ int insert_special_int(char *where, size_t size, int32_t val) {
         *where |= 0x80; /* set that high–order bit */
     }
     return err;
+}
+/* ------------------------------ CREATE END ------------------------------ */
+
+void listA(TarPtr *tar) {
+    
 }
