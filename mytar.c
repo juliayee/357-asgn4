@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #define BUFFSIZE 10
+#define FILES 100
 
 /*OFFSETS*/
 #define OFF_NAME 0
@@ -47,14 +48,7 @@
 #define LEN_DEVMINOR 8
 #define LEN_PREFIX 155
 
-typedef struct tarinfo *tarinfoptr;
-typedef struct tarinfo {
-    char** files; /*list of files*/
-    int numFiles; /*number of files*/
-    int headers; /*number of headers in tar*/
-    char *tarName;
-} TarInfo;
-
+typedef struct tarHeader *TarHeaderPtr;
 typedef struct tarHeader{
     char name[LEN_NAME + 1];
     mode_t mode;
@@ -72,16 +66,26 @@ typedef struct tarHeader{
     int devmajor;
     int devminor;
     char prefix[LEN_PREFIX + 1];
-};
+} TarHeader; 
 
-tarinfoptr handle_args(int, char **, char **, int[]);
-char **list_files(int, char **);
-void listA(tarinfo);
+typedef struct tar *TarPtr;
+typedef struct tar {
+    char* files[FILES]; /*list of files*/
+    TarHeaderPtr headers[FILES]; 
+    int numFiles; /*number of files*/
+    int numHeaders; /*number of headers in tar*/
+    char *tarName;
+} Tar;
+
+/*---MY FUNCTIONS---*/
+TarPtr handle_args(int, char *[], char *[], int[]);
+void fill_files(int, char **, TarPtr);
+void listA(tar);
 
 int main(int argc,char *argv[]){
     char *options;
-    int vs[1] = {0, 0};
-    tarinfoptr ti;
+    int vs[1] = {0};
+    TarPtr ti;
     int i;
 
     ti = handle_args(argc, argv, &options, vs);
@@ -117,14 +121,13 @@ int main(int argc,char *argv[]){
         }
     }
 
-    free(ti->files);
     free(ti);
     return 0;
 }
 
-tarinfoptr handle_args(int argc, char **argv, char **opt, int vs[]) {
+TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
     char *cin, *tin, *xin;
-    tarinfoptr ti = (tarinfoptr) malloc(sizeof(TarInfo));
+    TarPtr ti = (TarPtr) malloc(sizeof(Tar));
 
     if ((argc < 3)) {
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
@@ -155,7 +158,7 @@ tarinfoptr handle_args(int argc, char **argv, char **opt, int vs[]) {
         if (strchr(argv[1], (int) 'S') != NULL)
             vs[1] = 1;
         
-        ti->files = list_files(argc, argv);
+        fill_files(argc, argv, ti);
         ti->numFiles = argc - 3;
         ti->tarName = argv[2];
     }
@@ -163,27 +166,15 @@ tarinfoptr handle_args(int argc, char **argv, char **opt, int vs[]) {
     return ti;
 }
 
-char **list_files(int argc, char **argv) {
+void fill_files(int argc, char **argv, TarPtr ti) {
     int i;
-    size_t count = 0, size = 0;
-    char **files = NULL;
-    for (i = 3; i < (argc); i++) {
-        count += 1;
-        if (count >= size) {
-            size += BUFFSIZE;
-            files = realloc(files, size*sizeof(char *));
-            if (files == NULL) {
-                perror("list_files");
-                exit(-1);
-            }
-        }
-        *(files + count - 1) = argv[i];
+    for (i = 0; i + 3 < (argc); i++) {
+        ti->files[i] = argv[i + 3];
     }
-
-    return files;
 }
 
-void create(tarinfoptr ti){
+/* ----------------------------- CREATE START ----------------------------- */
+void create(TarPtr ti){
     int nums = ti->numFiles;
     int i = 0;
     int comp;
@@ -214,7 +205,6 @@ void create(tarinfoptr ti){
 
 }
 
-/* ----------------------------- CREATE START ----------------------------- */
 void createFile(){
     /*open file*/
     /*create header*/
@@ -263,7 +253,7 @@ int insert_special_int(char *where, size_t size, int32_t val) {
         * done.
         */
         err++;
-    } else {
+    } else {git 
         /* game on....*/
         memset(where, 0, size); /* Clear out the buffer */
         *(int32_t *)(where+size−sizeof(val)) = htonl(val); /* place the int */
@@ -273,6 +263,6 @@ int insert_special_int(char *where, size_t size, int32_t val) {
 }
 /* ------------------------------ CREATE END ------------------------------ */
 
-void listA(tarinfoptr *tar) {
-    
+void listA(TarPtr *tar) {
+
 }
