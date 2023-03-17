@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #define BUFFSIZE 10
+#define FILES 100
 
 /*OFFSETS*/
 #define OFF_NAME 0
@@ -49,9 +50,10 @@
 
 typedef struct Tar *TarPtr;
 typedef struct tar {
-    char** files; /*list of files*/
+    char* files[FILES]; /*list of files*/
+    TarHeaderPtr headers[FILES]; 
     int numFiles; /*number of files*/
-    int headers; /*number of headers in tar*/
+    int numHeaders; /*number of headers in tar*/
     char *tarName;
 } Tar;
 typedef struct TarHeader *TarHeaderPtr;
@@ -74,7 +76,9 @@ typedef struct tarHeader{
     char prefix[LEN_PREFIX + 1];
 } TarHeader; 
 
-TarPtr handle_args(int, char **, char **, int[]);
+
+/*---MY FUNCTIONS---*/
+TarPtr handle_args(int, char *[], char *[], int[]);
 char **list_files(int, char **);
 
 int main(int argc,char *argv[]){
@@ -167,7 +171,7 @@ TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
 char **list_files(int argc, char **argv) {
     int i;
     size_t count = 0, size = 0;
-    char **files = NULL;
+    char *files[FILES] = NULL;
     for (i = 3; i < (argc); i++) {
         count += 1;
         if (count >= size) {
