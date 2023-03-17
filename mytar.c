@@ -47,14 +47,14 @@
 #define LEN_DEVMINOR 8
 #define LEN_PREFIX 155
 
-typedef struct tarinfo *tarinfoptr;
-typedef struct tarinfo {
+typedef struct Tar *TarPtr;
+typedef struct tar {
     char** files; /*list of files*/
     int numFiles; /*number of files*/
     int headers; /*number of headers in tar*/
     char *tarName;
-} TarInfo;
-
+} Tar;
+typedef struct TarHeader *TarHeaderPtr;
 typedef struct tarHeader{
     char name[LEN_NAME + 1];
     mode_t mode;
@@ -72,15 +72,15 @@ typedef struct tarHeader{
     int devmajor;
     int devminor;
     char prefix[LEN_PREFIX + 1];
-};
+} TarHeader; 
 
-tarinfoptr handle_args(int, char **, char **, int[]);
+TarPtr handle_args(int, char **, char **, int[]);
 char **list_files(int, char **);
 
 int main(int argc,char *argv[]){
     char *options;
     int vs[1] = {0, 0};
-    tarinfoptr ti;
+    TarPtr ti;
     int i;
 
     ti = handle_args(argc, argv, &options, vs);
@@ -123,9 +123,9 @@ int main(int argc,char *argv[]){
 
 /*strchr for f & check that there's enough valid args, exit otherwise; 
 init tarinfoptr*/
-tarinfoptr handle_args(int argc, char **argv, char **opt, int vs[]) {
+TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
     char *cin, *tin, *xin;
-    tarinfoptr ti = (tarinfoptr) malloc(sizeof(TarInfo));
+    TarPtr ti = (TarPtr) malloc(sizeof(Tar));
 
     if ((argc < 3)) {
         printf("Usage: mytar [ctxvS]f tarfile [ path [ ... ] ]\n");
@@ -184,7 +184,7 @@ char **list_files(int argc, char **argv) {
     return files;
 }
 
-void create(tarinfoptr ti){
+void create(TarPtr ti){
     int nums = ti->numFiles;
     int i = 0;
     int comp;
