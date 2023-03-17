@@ -11,6 +11,9 @@
 #include <dirent.h>
 #define BUFFSIZE 10
 #define FILES 100
+#define BUFFER 500
+#define V 0
+#define S 1
 
 /*OFFSETS*/
 #define OFF_NAME 0
@@ -56,6 +59,7 @@ typedef struct tar {
     int numHeaders; /*number of headers in tar*/
     char *tarName;
 } Tar;
+
 typedef struct TarHeader *TarHeaderPtr;
 typedef struct tarHeader{
     char name[LEN_NAME + 1];
@@ -84,6 +88,7 @@ char **list_files(int, char **);
 int main(int argc,char *argv[]){
     char *options;
     int vs[1] = {0, 0};
+    /*{V, S}*/
     TarPtr ti;
     int i;
 
@@ -156,9 +161,9 @@ TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
 
         /* check if v or S are in opt */
         if (strchr(argv[1], (int) 'v') != NULL)
-            vs[0] = 1;
+            vs[V] = 1;
         if (strchr(argv[1], (int) 'S') != NULL)
-            vs[1] = 1;
+            vs[S] = 1;
         
         ti->files = list_files(argc, argv);
         ti->numFiles = argc - 3;
@@ -188,35 +193,43 @@ char **list_files(int argc, char **argv) {
     return files;
 }
 
-void create(TarPtr ti){
-    int nums = ti->numFiles;
-    int i = 0;
-    int comp;
-    char buff[500];
-    int ftd = -1;
-    /*Open every directory passed through args*/
-    for(i = 0; i < nums; i++){
-        /*if dir not null*/
-        if(ti->files[i]){
-            comp = strcmp(*(ti->files[i]), "/");
-            if(comp == 0){
-                /*is a slash*/
-                /*copy into buffer*/
-                strcpy(buff, ti->files[i]);
-                /*create a directory*/
-                
-            }
-            else{
-                /*store file name in buffer*/
-                /*add slash*/
+void create(TarPtr ti, int *vs){
+    int numFiles = ti->numFiles;
+    int i, comp, pid = 0;
+    char buff[BUFFER];
+    int ftar = -1; /*fd for tar*/
+    DIR *dir;
 
-            }
-        }
-        else{
-            /*create a file, dir is null*/
-        }
+    /*Open tar file*/
+    if((ftar = open(ti->tarName, O_CREAT | O_TRUNC | O_WRONLY, 0600)) != 0){
+        perror("Cannot open tar file.");
+        exit(-1);
     }
-
+    /*Open directories*/
+    for(i = 0; i < numFiles; i++);
+    dir = opendir(ti->files[i]);
+    /*if dir not null*/
+    if(dir){
+        comp = strcmp(*(ti->files[i]), "/");
+        /*if '/'*/
+        if(comp == 0){
+            /*copy into buffer*/
+            strcpy(buff, ti->files[i]);
+        }
+        /*not '/'*/
+        else{
+            /*copy file name into buff and add '/'*/
+            sprintf(buff, "%s/", tar->files[i]);
+        }
+        /*Create directory*/
+        createDirectory(ti, &buff, dir, ftar);
+        closedir(dir);
+    }
+    else{
+        /*create a file, dir is null*/
+        createFile();
+    }
+    close(ftar);
 }
 
 void createFile(){
@@ -226,6 +239,20 @@ void createFile(){
     /*incr num headers*/
     /*write the contents of file*/
     /*close file*/
+}
+
+void createDirectory(TarPtr ti, char *filename[], DIR *dir, int ftar){
+    DIR *newD;
+    struct dirent *pd;
+    struct stat *sbuff;
+    int fDir;
+    char buff[BUFFER];
+
+    fDir = dirfd();
+}
+
+void writeHeader(){
+
 }
 
 /*-------------------------------Given functions for 
