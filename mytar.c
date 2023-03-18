@@ -14,6 +14,10 @@
 #define BUFFER 500
 #define V 0
 #define S 1
+#define TDIR 5
+#define TFILE 0
+#define PATHMAX 256
+#define MASK 0x1FF
 
 /*OFFSETS*/
 #define OFF_NAME 0
@@ -62,22 +66,21 @@ typedef struct tar {
 
 typedef struct TarHeader *TarHeaderPtr;
 typedef struct tarHeader{
-    char name[LEN_NAME + 1];
-    mode_t mode;
-    uid_t uid;
-    gid_t gid;
-    size_t size;
-    time_t mtime;
-    int chksum;
-    char typeflag;
-    char linkname[LEN_LINKNAME + 1];
+    char name[LEN_NAME];
+    char mode[LEN_MODE];
+    char uid[LEN_UID];
+    char gid[LEN_GID];
+    char size[LEN_SIZE];
+    char mtime[LEN_MTIME];
+    char chksum[LEN_CHKSUM];
+    char typeflag[LEN_TYPEFLAG];
+    char linkname[LEN_LINKNAME];
     char magic[LEN_MAGIC];
-    char version[LEN_VERSION + 1];
+    char version[LEN_VERSION];
     char uname[LEN_UNAME];
     char gname[LEN_GNAME];
-    int devmajor;
-    int devminor;
-    char prefix[LEN_PREFIX + 1];
+    char devmajor[LEN_DEVMAJOR];
+    char devminor[LEN_DEVMINOR];
 } TarHeader; 
 
 /*---MY FUNCTIONS---*/
@@ -225,18 +228,69 @@ void createFile(){
     /*close file*/
 }
 
-void createDirectory(TarPtr ti, char *filename[], DIR *dir, int ftar){
-    DIR *newD;
+void createDirectory(TarPtr t, char *filename[], DIR *dir, int ftar){
+    DIR *new;
     struct dirent *pd;
     struct stat *sbuff;
-    int fDir;
+    int fdir;
     char buff[BUFFER];
 
-    fDir = dirfd();
+    sbuff = calloc(1, (sizeof(struct stat) + 1));
+    fdir = dirfd();
+    if(fstat(fdir, sbuff) != 0){
+        perror("Stat: createDirectory.");
+        exit(-1);
+    }
+    writeHeader(t, sbuff, filename, 5);
+    t->numHeaders++;
+    while((pd = readdir(dir)) != NULL){
+        if((strcmp(pd->d_name, ".")!=0) && (strcmp(pd->d_name, "..")!=0)){
+            if(strlen(pd->d_name) >= PATHMAX){
+                perror("Path too long: createDirectory.");
+                continue;
+            }
+            buff = calloc(PATHMAX, sizeof(char));
+            sprintf(buff, "%s%s", filename, pd->d_name);
+            new = opendir(buff);
+            if(new){
+                sprintf(buff, "%s%c", buff, "/");
+                createDirectory(t, buff, new, ftar);
+                closedir(new);
+            }
+            else{
+                /*-------Put in params---------*/
+                createFile();
+            }
+        }
+    }
+    free(sbuff);
 }
 
-void writeHeader(){
-
+void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t){
+    TarHeaderPtr h = t->headers[t->numheaders] = calloc(1, sizeof(TarHeader));
+    struct passwd *pwuid;
+    struct group *g;
+    strcpy(h->name, filename);
+    sprintf(h->mode, "%06ho", (unsigned short)(sbuff->st_mode & MASK));
+    sprintf(h->uid, "%06o", (int)sbuff->st_uid);
+    sprintf(h->gid, "%06o", (int)sbuff->st_gid);
+    sprintf(h->mtime, "%lo", (long) sbuff->st_mtime);
+    sprintf(h->magic, "%d", LEN_MAGIC);
+    strcpy(h->version, "00");
+    if (t == TDIR) {
+	    sprintf(h->size, "%011lo", (unsigned long)0);
+        *(h->typeflag) = '5';
+    }
+    else if(t == TFILE){
+        sprintf(h->size, "%011lo", (long)sbuff->st_size);
+        *(h->typeflag) = '0';
+    }
+    pwuid = getpwuid(getuid());
+    g = getgrgid(getgid());
+    strcpy(h->uname, pwuid->pw_name);
+    strcpy(h->gname, grp->gr_name);
+    /*sprintf(h->chksum); */  
+    /*linkname, devmajor, devminor*/    
 }
 
 /*-------------------------------Given functions for 
