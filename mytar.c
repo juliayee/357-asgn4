@@ -465,7 +465,7 @@ void listV(TarPtr tar) {
             permarr[9] = 'x';
             mode = mode - 1;
         } 
-        mtime = strtol(header->mtime, &buf, 8);
+        mtime = strtol(header->mtime, &buff, 8);
         time(&mtime);
         ptrtime = localtime(&mtime);
         printf("%s %s/%s ", permarr, header->uname, header->gname);
