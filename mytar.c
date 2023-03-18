@@ -219,7 +219,7 @@ void create(TarPtr ti, int *vs){
     close(ftar);
 }
 
-void createFile(){
+void createFile(TarPtr t, char *filename, int ftar){
     /*open file*/
     /*create header*/
     /*write header to file*/
@@ -228,7 +228,7 @@ void createFile(){
     /*close file*/
 }
 
-void createDirectory(TarPtr t, char *filename[], DIR *dir, int ftar){
+void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar){
     DIR *new;
     struct dirent *pd;
     struct stat *sbuff;
@@ -258,8 +258,7 @@ void createDirectory(TarPtr t, char *filename[], DIR *dir, int ftar){
                 closedir(new);
             }
             else{
-                /*-------Put in params---------*/
-                createFile();
+                createFile(t, buff, ftar);
             }
         }
     }
