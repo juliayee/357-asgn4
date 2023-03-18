@@ -63,7 +63,7 @@
 typedef struct tar *TarPtr;
 typedef struct tar {
     char* files[FILES]; /*list of files*/
-    TarHeader* headers[FILES]; 
+    TarHeaderPtr headers[FILES]; 
     int numFiles; /*number of files*/
     int numHeaders; /*number of headers in tar*/
     char *tarName;
@@ -94,7 +94,7 @@ void fill_files(int argc, char **argv, TarPtr ti);
 void create(TarPtr ti, int *vs);
 void createFile(TarPtr t, char *filename, int ftar, int *vs);
 void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar, int *vs);
-void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t);
+void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char ty);
 uint32_t extract_special_int(char *where, int len);
 int insert_special_int(char *where, size_t size, int32_t val);
 void listA(TarPtr tar);
@@ -228,9 +228,9 @@ void create(TarPtr ti, int *vs){
         if(pid == 0){
             /*if v*/
             if(vs[V] == 1){ 
-                printf("Compressing '%s'\n", t->tarname);
+                printf("Compressing '%s'\n", ti->tarName);
             }
-            execlp(COMPRESSION, COMPRESSION, "-9", tar->tarfile, NULL);
+            execlp("gzip", "gzip", "-9", ti->tarName, NULL);
             perror("exec failed");
             exit(-1);   
         }
@@ -295,11 +295,11 @@ void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar, int *vs){
                 perror("Path too long: createDirectory.");
                 continue;
             }
-            buff = calloc(PATHMAX, sizeof(char));
+            buff = (char*)calloc(PATHMAX, sizeof(char));
             sprintf(buff, "%s%s", filename, pd->d_name);
             new = opendir(buff);
             if(new){
-                sprintf(buff, "%s%c", buff, "/");
+                sprintf(buff, "%s%c", buff, '/');
                 createDirectory(t, buff, new, ftar, vs);
                 closedir(new);
             }
@@ -311,10 +311,10 @@ void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar, int *vs){
     free(sbuff);
 }
 
-void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t){
+void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char ty){
     TarHeaderPtr h = t->headers[t->numHeaders] = calloc(1, sizeof(TarHeader));
     struct passwd *pwuid;
-    struct group *g;
+    struct group *grp;
     strcpy(h->name, filename);
     sprintf(h->mode, "%06ho", (unsigned short)(sbuff->st_mode & MASK));
     sprintf(h->uid, "%06o", (int)sbuff->st_uid);
@@ -322,16 +322,16 @@ void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t){
     sprintf(h->mtime, "%lo", (long) sbuff->st_mtime);
     sprintf(h->magic, "%d", LEN_MAGIC);
     strcpy(h->version, "00");
-    if (t == TDIR) {
+    if (ty == TDIR) {
 	    sprintf(h->size, "%011lo", (unsigned long)0);
         *(h->typeflag) = '5';
     }
-    else if(t == TFILE){
+    else if(ty == TFILE){
         sprintf(h->size, "%011lo", (long)sbuff->st_size);
         *(h->typeflag) = '0';
     }
     pwuid = getpwuid(getuid());
-    g = getgrgid(getgid());
+    grp = getgrgid(getgid());
     strcpy(h->uname, pwuid->pw_name);
     strcpy(h->gname, grp->gr_name);
     /*sprintf(h->chksum); */  
