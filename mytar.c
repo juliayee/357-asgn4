@@ -9,6 +9,11 @@
 /*#include <tar.h>*/
 #include <fcntl.h>
 #include <dirent.h>
+#include <grp.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <time.h>
+
 #define BUFFSIZE 10
 #define FILES 100
 #define BUFFER 500
@@ -209,26 +214,62 @@ void create(TarPtr ti, int *vs){
             sprintf(buff, "%s/", ti->files[i]);
         }
         /*Create directory*/
-        createDirectory(ti, &buff, dir, ftar);
+        createDirectory(ti, buff, dir, ftar);
         closedir(dir);
     }
     else{
         /*create a file, dir is null*/
-        createFile();
+        createFile(ti, ti->files[i]);
     }
     close(ftar);
+    /*if s*/
+    if(vs[1] == 1){
+        pid = fork();
+        /*if v*/
+        if(vs[0] == 1){
+
+        }
+        wait(NULL);
+    }
 }
 
-void createFile(TarPtr t, char *filename, int ftar){
+void createFile(TarPtr t, char *filename, int ftar, int *vs){
+    int fd, size;
+    struct stat *sbuff;
+    char buff[BUFFER];
+
+    sbuff = calloc(1, (sizeof(struct stat) + 1));
+    
+    if(strlen(filename) >= PATHMAX){
+        perror("Path too long: createFile.");
+        return;
+    }
     /*open file*/
-    /*create header*/
-    /*write header to file*/
-    /*incr num headers*/
+    if(fd = open(filename, O_RDONLY) != 0){
+        close(fd);
+        return;
+    }
+    /*Header stuff*/
+    if(fstat(fd, sbuff) != 0){
+        perror("Stat: createFile.");
+        exit(-1);
+    }
+    writeHeader(t, sbuff, filename, TFILE);
     /*write the contents of file*/
+    write(ftar, t->headers[t->numHeaders], sizeof(TarHeader));
+    t->numHeaders++;
+    while((size = read(fd, buff, BUFFER)) != 0){
+        write(ftar, buff, size);
+    }
+    if(vs[0] == 1){
+        printf("Added file '%s'\n", filename);
+    }
     /*close file*/
+    close(fd);
+    free(sbuff);
 }
 
-void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar){
+void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar, int *vs){
     DIR *new;
     struct dirent *pd;
     struct stat *sbuff;
@@ -236,7 +277,7 @@ void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar){
     char buff[BUFFER];
 
     sbuff = calloc(1, (sizeof(struct stat) + 1));
-    fdir = dirfd();
+    fdir = dirfd(dir);
     if(fstat(fdir, sbuff) != 0){
         perror("Stat: createDirectory.");
         exit(-1);
@@ -254,11 +295,11 @@ void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar){
             new = opendir(buff);
             if(new){
                 sprintf(buff, "%s%c", buff, "/");
-                createDirectory(t, buff, new, ftar);
+                createDirectory(t, buff, new, ftar, vs);
                 closedir(new);
             }
             else{
-                createFile(t, buff, ftar);
+                createFile(t, buff, ftar, vs);
             }
         }
     }
