@@ -111,26 +111,24 @@ int main(int argc,char *argv[]){
         printf("tar Name: %s\n", ti->tarName);
     #endif
 
-    for (i = 0; i < strlen(options); i++) {
-        switch((options)[i]) {
-            case 'c':
-                /*call creat funcs*/
-                printf("c\n");
-                break;
-            
-            case 't':
-                /*list funcs*/
-                printf("t\n");                
-                break;
+    switch(options) {
+        case 'c':
+            /*call creat funcs*/
+            create();
+            break;
+        
+        case 't':
+            /*list funcs*/
+            printf("t\n");                
+            break;
 
-            case 'x':
-                /*extract funcs*/
-                printf("x\n");
-                break;
+        case 'x':
+            /*extract funcs*/
+            printf("x\n");
+            break;
 
-            default:
-                break;
-        }
+        default:
+            break;
     }
 
     free(ti);
