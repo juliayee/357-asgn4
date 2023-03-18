@@ -105,33 +105,27 @@ int main(int argc,char *argv[]){
 
     ti = handle_args(argc, argv, &options, vs);
 
-    #ifdef TEST
-        printf("options: %s\n", options);
-        printf("files:\n");
-        for (i = 0; i < ti->numFiles; i++)
-            printf("\t%s\n", ti->files[i]);
-        printf("numFiles: %d\n", ti->numFiles);
-        printf("tar Name: %s\n", ti->tarName);
-    #endif
+    for (i = 0; i < strlen(options); i++) {
+        switch((options)[i]) {
+            case 'c':
+                /*call creat funcs*/
+                printf("c\n");
+                break;
+            
+            case 't':
+                if (vs[V] == 1)
+                    listV(ti);
+                else           
+                    listA(ti); 
+                break;
 
-    switch(options) {
-        case 'c':
-            /*call creat funcs*/
-            create(ti, vs);
-            break;
-        
-        case 't':
-            /*list funcs*/
-            printf("t\n");                
-            break;
+            case 'x':
+                extract(ti, argc, argv, options);
+                break;
 
-        case 'x':
-            /*extract funcs*/
-            printf("x\n");
-            break;
-
-        default:
-            break;
+            default:
+                break;
+        }
     }
 
     free(ti);
