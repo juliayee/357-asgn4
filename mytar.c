@@ -117,7 +117,7 @@ int main(int argc,char *argv[]){
     switch(options) {
         case 'c':
             /*call creat funcs*/
-            create();
+            create(ti, vs);
             break;
         
         case 't':
