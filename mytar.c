@@ -102,7 +102,7 @@ uint32_t extract_special_int(char *where, int len);
 int insert_special_int(char *where, size_t size, int32_t val);
 void listA(TarPtr tar);
 void listV(TarPtr tar);
-void extract(TarPtr tar, int argc, char **argv, char *opt);
+void extract(TarPtr tar, int argc, char **argv, int vs[]);
 
 int main(int argc,char *argv[]){
     char *options;
@@ -112,24 +112,17 @@ int main(int argc,char *argv[]){
     int i;
 
     ti = handle_args(argc, argv, &options, vs);
-    switch((int)options) {
-        case 'c':
-            create(ti, vs);
-            break;
-        
-        case 't':
+    if (strchr(options, (int) 'c')) {
+        create(ti, vs);
+    }
+    if (strchr(options, (int) 't')) {
             if (vs[V] == 1)
                 listV(ti);
             else           
-                listA(ti); 
-            break;
-
-        case 'x':
-            extract(ti, argc, argv, options);
-            break;
-
-        default:
-            break;
+                listA(ti);
+    }
+    if (strchr(options, (int) 'x')) {
+        extract(ti, argc, argv, vs);
     }
 
     free(ti);
@@ -434,7 +427,7 @@ void listV(TarPtr tar) {
 /* ------------------------------- LIST END ------------------------------- */
 
 /* ---------------------------- EXTRACT START ---------------------------- */
-void extract(TarPtr tar, int argc, char **argv, char *opt) {
+void extract(TarPtr tar, int argc, char **argv, int vs[]) {
     int headSize, fd, extracted, mode, i;
     TarHeaderPtr header;
     char *buff;
@@ -444,7 +437,7 @@ void extract(TarPtr tar, int argc, char **argv, char *opt) {
 	    while ((read(fd, header, sizeof(TarHeader))) != 0) {
 	        headSize = strtol(header->size, &buff, 8); 
 	        char buffer[headSize];
-            if (strchr(opt, (int) 'v')) {
+            if (vs[V]) {
             printf("%s\n", header->name);
             }
             if (*(header->typeflag) == '5') {
@@ -466,7 +459,7 @@ void extract(TarPtr tar, int argc, char **argv, char *opt) {
 	    	headSize = strtol(header->size, &buff, 8); 
 	    	char buffer[headSize];
             if (strcmp(argv[i], header->name) == 0) {
-                if (strchr(opt, (int) 'v')) {
+                if (vs[V]) {
                     printf("%s\n", header->name);
                 }
                 if (*(header->typeflag) == '5') {
