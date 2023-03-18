@@ -89,12 +89,17 @@ typedef struct tarHeader{
 } TarHeader; 
 
 /*---MY FUNCTIONS---*/
-TarPtr handle_args(int, char *[], char *[], int[]);
-void fill_files(int, char **, TarPtr);
-void listA(TarPtr);
-void listV(TarPtr);
-void extract(TarPtr, int, char **, char *);
-
+TarPtr handle_args(int argc, char **argv, char **opt, int vs[]);
+void fill_files(int argc, char **argv, TarPtr ti);
+void create(TarPtr ti, int *vs);
+void createFile(TarPtr t, char *filename, int ftar, int *vs);
+void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar, int *vs);
+void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t);
+uint32_t extract_special_int(char *where, int len);
+int insert_special_int(char *where, size_t size, int32_t val);
+void listA(TarPtr tar);
+void listV(TarPtr tar);
+void extract(TarPtr tar, int argc, char **argv, char *opt);
 
 int main(int argc,char *argv[]){
     char *options;
