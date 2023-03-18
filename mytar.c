@@ -108,8 +108,7 @@ int main(int argc,char *argv[]){
     for (i = 0; i < strlen(options); i++) {
         switch((options)[i]) {
             case 'c':
-                /*call creat funcs*/
-                printf("c\n");
+                create(ti, vs);
                 break;
             
             case 't':
