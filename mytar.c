@@ -263,6 +263,19 @@ int insert_special_int(char *where, size_t size, int32_t val) {
 }
 /* ------------------------------ CREATE END ------------------------------ */
 
-void listA(TarPtr *tar) {
-    
+void listA(TarPtr tarpt) {
+    int tar, headSize;
+    TarHeaderPtr header;
+    char *buff;
+
+    tar = open(tarpt->tarName, O_RDONLY);
+    if (tar == -1) {
+        perror("open");
+        exit(-1);
+    }
+    while(read(tar, header, sizeof(TarHeader)) != 0) {
+        headSize = strtol(header->size, &buff, 8);
+        lseek(tar, headSize, SEEK_CUR);
+        printf("%s\n", header->name);
+    }
 }
