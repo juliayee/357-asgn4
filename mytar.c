@@ -11,6 +11,13 @@
 #include <dirent.h>
 #define BUFFSIZE 10
 #define FILES 100
+#define BUFFER 500
+#define V 0
+#define S 1
+#define TDIR 5
+#define TFILE 0
+#define PATHMAX 256
+#define MASK 0x1FF
 
 /*OFFSETS*/
 #define OFF_NAME 0
@@ -48,27 +55,7 @@
 #define LEN_DEVMINOR 8
 #define LEN_PREFIX 155
 
-typedef struct tarHeader *TarHeaderPtr;
-typedef struct tarHeader{
-    char name[LEN_NAME + 1];
-    mode_t mode;
-    uid_t uid;
-    gid_t gid;
-    size_t size;
-    time_t mtime;
-    int chksum;
-    char typeflag;
-    char linkname[LEN_LINKNAME + 1];
-    char magic[LEN_MAGIC];
-    char version[LEN_VERSION + 1];
-    char uname[LEN_UNAME];
-    char gname[LEN_GNAME];
-    int devmajor;
-    int devminor;
-    char prefix[LEN_PREFIX + 1];
-} TarHeader; 
-
-typedef struct tar *TarPtr;
+typedef struct Tar *TarPtr;
 typedef struct tar {
     char* files[FILES]; /*list of files*/
     TarHeaderPtr headers[FILES]; 
@@ -77,6 +64,25 @@ typedef struct tar {
     char *tarName;
 } Tar;
 
+typedef struct TarHeader *TarHeaderPtr;
+typedef struct tarHeader{
+    char name[LEN_NAME];
+    char mode[LEN_MODE];
+    char uid[LEN_UID];
+    char gid[LEN_GID];
+    char size[LEN_SIZE];
+    char mtime[LEN_MTIME];
+    char chksum[LEN_CHKSUM];
+    char typeflag[LEN_TYPEFLAG];
+    char linkname[LEN_LINKNAME];
+    char magic[LEN_MAGIC];
+    char version[LEN_VERSION];
+    char uname[LEN_UNAME];
+    char gname[LEN_GNAME];
+    char devmajor[LEN_DEVMAJOR];
+    char devminor[LEN_DEVMINOR];
+} TarHeader; 
+
 /*---MY FUNCTIONS---*/
 TarPtr handle_args(int, char *[], char *[], int[]);
 void fill_files(int, char **, TarPtr);
@@ -84,7 +90,8 @@ void listA(tar);
 
 int main(int argc,char *argv[]){
     char *options;
-    int vs[1] = {0};
+    int vs[1] = {0, 0};
+    /*{V, S}*/
     TarPtr ti;
     int i;
 
@@ -154,9 +161,9 @@ TarPtr handle_args(int argc, char **argv, char **opt, int vs[]) {
 
         /* check if v or S are in opt */
         if (strchr(argv[1], (int) 'v') != NULL)
-            vs[0] = 1;
+            vs[V] = 1;
         if (strchr(argv[1], (int) 'S') != NULL)
-            vs[1] = 1;
+            vs[S] = 1;
         
         fill_files(argc, argv, ti);
         ti->numFiles = argc - 3;
@@ -173,36 +180,43 @@ void fill_files(int argc, char **argv, TarPtr ti) {
     }
 }
 
-/* ----------------------------- CREATE START ----------------------------- */
-void create(TarPtr ti){
-    int nums = ti->numFiles;
-    int i = 0;
-    int comp;
-    char buff[500];
-    int ftd = -1;
-    /*Open every directory passed through args*/
-    for(i = 0; i < nums; i++){
-        /*if dir not null*/
-        if(ti->files[i]){
-            comp = strcmp(*(ti->files[i]), "/");
-            if(comp == 0){
-                /*is a slash*/
-                /*copy into buffer*/
-                strcpy(buff, ti->files[i]);
-                /*create a directory*/
-                
-            }
-            else{
-                /*store file name in buffer*/
-                /*add slash*/
+void create(TarPtr ti, int *vs){
+    int numFiles = ti->numFiles;
+    int i, comp, pid = 0;
+    char buff[BUFFER];
+    int ftar = -1; /*fd for tar*/
+    DIR *dir;
 
-            }
-        }
-        else{
-            /*create a file, dir is null*/
-        }
+    /*Open tar file*/
+    if((ftar = open(ti->tarName, O_CREAT | O_TRUNC | O_WRONLY, 0600)) != 0){
+        perror("Cannot open tar file.");
+        exit(-1);
     }
-
+    /*Open directories*/
+    for(i = 0; i < numFiles; i++);
+    dir = opendir(ti->files[i]);
+    /*if dir not null*/
+    if(dir){
+        comp = strcmp(*(ti->files[i]), "/");
+        /*if '/'*/
+        if(comp == 0){
+            /*copy into buffer*/
+            strcpy(buff, ti->files[i]);
+        }
+        /*not '/'*/
+        else{
+            /*copy file name into buff and add '/'*/
+            sprintf(buff, "%s/", tar->files[i]);
+        }
+        /*Create directory*/
+        createDirectory(ti, &buff, dir, ftar);
+        closedir(dir);
+    }
+    else{
+        /*create a file, dir is null*/
+        createFile();
+    }
+    close(ftar);
 }
 
 void createFile(){
@@ -212,6 +226,71 @@ void createFile(){
     /*incr num headers*/
     /*write the contents of file*/
     /*close file*/
+}
+
+void createDirectory(TarPtr t, char *filename[], DIR *dir, int ftar){
+    DIR *new;
+    struct dirent *pd;
+    struct stat *sbuff;
+    int fdir;
+    char buff[BUFFER];
+
+    sbuff = calloc(1, (sizeof(struct stat) + 1));
+    fdir = dirfd();
+    if(fstat(fdir, sbuff) != 0){
+        perror("Stat: createDirectory.");
+        exit(-1);
+    }
+    writeHeader(t, sbuff, filename, 5);
+    t->numHeaders++;
+    while((pd = readdir(dir)) != NULL){
+        if((strcmp(pd->d_name, ".")!=0) && (strcmp(pd->d_name, "..")!=0)){
+            if(strlen(pd->d_name) >= PATHMAX){
+                perror("Path too long: createDirectory.");
+                continue;
+            }
+            buff = calloc(PATHMAX, sizeof(char));
+            sprintf(buff, "%s%s", filename, pd->d_name);
+            new = opendir(buff);
+            if(new){
+                sprintf(buff, "%s%c", buff, "/");
+                createDirectory(t, buff, new, ftar);
+                closedir(new);
+            }
+            else{
+                /*-------Put in params---------*/
+                createFile();
+            }
+        }
+    }
+    free(sbuff);
+}
+
+void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t){
+    TarHeaderPtr h = t->headers[t->numheaders] = calloc(1, sizeof(TarHeader));
+    struct passwd *pwuid;
+    struct group *g;
+    strcpy(h->name, filename);
+    sprintf(h->mode, "%06ho", (unsigned short)(sbuff->st_mode & MASK));
+    sprintf(h->uid, "%06o", (int)sbuff->st_uid);
+    sprintf(h->gid, "%06o", (int)sbuff->st_gid);
+    sprintf(h->mtime, "%lo", (long) sbuff->st_mtime);
+    sprintf(h->magic, "%d", LEN_MAGIC);
+    strcpy(h->version, "00");
+    if (t == TDIR) {
+	    sprintf(h->size, "%011lo", (unsigned long)0);
+        *(h->typeflag) = '5';
+    }
+    else if(t == TFILE){
+        sprintf(h->size, "%011lo", (long)sbuff->st_size);
+        *(h->typeflag) = '0';
+    }
+    pwuid = getpwuid(getuid());
+    g = getgrgid(getgid());
+    strcpy(h->uname, pwuid->pw_name);
+    strcpy(h->gname, grp->gr_name);
+    /*sprintf(h->chksum); */  
+    /*linkname, devmajor, devminor*/    
 }
 
 /*-------------------------------Given functions for 
