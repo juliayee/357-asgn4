@@ -192,36 +192,42 @@ void create(TarPtr ti, int *vs){
         exit(-1);
     }
     /*Open directories*/
-    for(i = 0; i < numFiles; i++);
-    dir = opendir(ti->files[i]);
-    /*if dir not null*/
-    if(dir){
-        comp = strcmp(*(ti->files[i]), "/");
-        /*if '/'*/
-        if(comp == 0){
-            /*copy into buffer*/
-            strcpy(buff, ti->files[i]);
+    for(i = 0; i < numFiles; i++){
+        dir = opendir(ti->files[i]);
+        /*if dir not null*/
+        if(dir){
+            comp = strcmp(ti->files[i][strlen(ti->files[i]) - 1], "/");
+            /*if '/'*/
+            if(comp == 0){
+                /*copy into buffer*/
+                strcpy(buff, ti->files[i]);
+            }
+            /*not '/'*/
+            else{
+                /*copy file name into buff and add '/'*/
+                sprintf(buff, "%s/", ti->files[i]);
+            }
+            /*Create directory*/
+            createDirectory(ti, buff, dir, ftar);
+            closedir(dir);
         }
-        /*not '/'*/
         else{
-            /*copy file name into buff and add '/'*/
-            sprintf(buff, "%s/", ti->files[i]);
+            /*create a file, dir is null*/
+            createFile(ti, ti->files[i]);
         }
-        /*Create directory*/
-        createDirectory(ti, buff, dir, ftar);
-        closedir(dir);
-    }
-    else{
-        /*create a file, dir is null*/
-        createFile(ti, ti->files[i]);
     }
     close(ftar);
-    /*if s*/
-    if(vs[1] == 1){
+    /*if s, interact with GNU tar*/
+    if(vs[S] == 1){
         pid = fork();
-        /*if v*/
-        if(vs[0] == 1){
-
+        if(pid == 0){
+            /*if v*/
+            if(vs[V] == 1){ 
+                printf("Compressing '%s'\n", t->tarname);
+            }
+            execlp(COMPRESSION, COMPRESSION, "-9", tar->tarfile, NULL);
+            perror("exec failed");
+            exit(-1);   
         }
         wait(NULL);
     }
@@ -255,7 +261,7 @@ void createFile(TarPtr t, char *filename, int ftar, int *vs){
     while((size = read(fd, buff, BUFFER)) != 0){
         write(ftar, buff, size);
     }
-    if(vs[0] == 1){
+    if(vs[V] == 1){
         printf("Added file '%s'\n", filename);
     }
     /*close file*/
