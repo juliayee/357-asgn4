@@ -55,7 +55,7 @@
 #define LEN_DEVMINOR 8
 #define LEN_PREFIX 155
 
-typedef struct Tar *TarPtr;
+typedef struct tar *TarPtr;
 typedef struct tar {
     char* files[FILES]; /*list of files*/
     TarHeaderPtr headers[FILES]; 
@@ -64,7 +64,7 @@ typedef struct tar {
     char *tarName;
 } Tar;
 
-typedef struct TarHeader *TarHeaderPtr;
+typedef struct tarHeader *TarHeaderPtr;
 typedef struct tarHeader{
     char name[LEN_NAME];
     char mode[LEN_MODE];
@@ -206,7 +206,7 @@ void create(TarPtr ti, int *vs){
         /*not '/'*/
         else{
             /*copy file name into buff and add '/'*/
-            sprintf(buff, "%s/", tar->files[i]);
+            sprintf(buff, "%s/", ti->files[i]);
         }
         /*Create directory*/
         createDirectory(ti, &buff, dir, ftar);
@@ -266,7 +266,7 @@ void createDirectory(TarPtr t, char *filename, DIR *dir, int ftar){
 }
 
 void writeHeader(TarPtr t, struct stat *sbuff, char *filename, char t){
-    TarHeaderPtr h = t->headers[t->numheaders] = calloc(1, sizeof(TarHeader));
+    TarHeaderPtr h = t->headers[t->numHeaders] = calloc(1, sizeof(TarHeader));
     struct passwd *pwuid;
     struct group *g;
     strcpy(h->name, filename);
@@ -341,6 +341,19 @@ int insert_special_int(char *where, size_t size, int32_t val) {
 }
 /* ------------------------------ CREATE END ------------------------------ */
 
-void listA(TarPtr *tar) {
-    
+void listA(TarPtr tarpt) {
+    int tar, headSize;
+    TarHeaderPtr header;
+    char *buff;
+
+    tar = open(tarpt->tarName, O_RDONLY);
+    if (tar == -1) {
+        perror("open");
+        exit(-1);
+    }
+    while(read(tar, header, sizeof(TarHeader)) != 0) {
+        headSize = strtol(header->size, &buff, 8);
+        lseek(tar, headSize, SEEK_CUR);
+        printf("%s\n", header->name);
+    }
 }
