@@ -63,7 +63,7 @@
 typedef struct tar *TarPtr;
 typedef struct tar {
     char* files[FILES]; /*list of files*/
-    TarHeaderPtr headers[FILES]; 
+    TarHeader* headers[FILES]; 
     int numFiles; /*number of files*/
     int numHeaders; /*number of headers in tar*/
     char *tarName;
