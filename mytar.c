@@ -9,6 +9,7 @@
 /*#include <tar.h>*/
 #include <fcntl.h>
 #include <dirent.h>
+#include <time.h>
 #define BUFFSIZE 10
 #define FILES 100
 #define BUFFER 500
@@ -86,7 +87,10 @@ typedef struct tarHeader{
 /*---MY FUNCTIONS---*/
 TarPtr handle_args(int, char *[], char *[], int[]);
 void fill_files(int, char **, TarPtr);
-void listA(tar);
+void listA(TarPtr);
+void listV(TarPtr);
+void extract(TarPtr, int, char **, char *);
+
 
 int main(int argc,char *argv[]){
     char *options;
@@ -96,15 +100,6 @@ int main(int argc,char *argv[]){
     int i;
 
     ti = handle_args(argc, argv, &options, vs);
-
-    #ifdef TEST
-        printf("options: %s\n", options);
-        printf("files:\n");
-        for (i = 0; i < ti->numFiles; i++)
-            printf("\t%s\n", ti->files[i]);
-        printf("numFiles: %d\n", ti->numFiles);
-        printf("tar Name: %s\n", ti->tarName);
-    #endif
 
     for (i = 0; i < strlen(options); i++) {
         switch((options)[i]) {
@@ -342,19 +337,149 @@ int insert_special_int(char *where, size_t size, int32_t val) {
 }
 /* ------------------------------ CREATE END ------------------------------ */
 
-void listA(TarPtr tarpt) {
-    int tar, headSize;
+/* ------------------------------ LIST START ------------------------------ */
+void listA(TarPtr tar) {
+    int fd, headSize;
     TarHeaderPtr header;
     char *buff;
 
-    tar = open(tarpt->tarName, O_RDONLY);
-    if (tar == -1) {
+    fd = open(tar->tarName, O_RDONLY);
+    if (fd == -1) {
         perror("open");
         exit(-1);
     }
-    while(read(tar, header, sizeof(TarHeader)) != 0) {
+    while(read(fd, header, sizeof(TarHeader)) != 0) {
         headSize = strtol(header->size, &buff, 8);
-        lseek(tar, headSize, SEEK_CUR);
+        lseek(fd, headSize, SEEK_CUR);
         printf("%s\n", header->name);
     }
 }
+
+void listV(TarPtr tar) {
+    TarHeaderPtr header;
+    /*read through tar file*/
+    /*name is null terminated*/
+    int fdTar, headersize;
+    char *buf;
+    int mode;
+    long mtime;
+    struct tm *ptrtime;
+
+    fdTar = open(tar->tarName, O_RDONLY);
+    if (fdTar < 0) {
+	exit(-1);
+    }
+    while ((read(fdTar, &header, sizeof(TarHeader))) != 0) {
+    	char permarr[] = "----------";
+        mode = atoi(header->mode);
+	headersize = strtol(header->size, &buf, 8);
+	if (header->typeflag[0] == '5') {
+	    permarr[0] = 'd';
+	}
+	else if (header->typeflag[0] == '2') {
+	    permarr[0] = 'l';
+	}
+
+	if (mode - 400 >= 0) {
+	    permarr[1] = 'r';
+	    mode = mode - 400;
+	}
+	if (mode - 200 >= 0) {
+	    permarr[2] = 'w';
+	    mode = mode - 200;
+        }
+	if (mode - 100 >= 0) {
+	    permarr[3] = 'x';
+	    mode = mode - 100;
+	}
+	if (mode - 40 >= 0) {
+	    permarr[4] = 'r';
+	    mode = mode - 40;
+	}
+	if (mode - 20 >= 0) {
+	    permarr[5] = 'w';
+	    mode = mode - 20;
+	}
+	if (mode - 10 >= 0) {
+	    permarr[6] = 'x';
+	    mode = mode - 10;
+ 	}
+	if (mode - 4 >= 0) {
+	    permarr[7] = 'r';
+	    mode = mode - 4;
+	}
+	if (mode - 2 >= 0) {
+	    permarr[8] = 'w';
+	    mode = mode - 2;
+	}
+	if (mode - 1 >= 0) {
+	    permarr[9] = 'x';
+	    mode = mode - 1;
+	} 
+	/*get last modified date*/
+	mtime = strtol(header->mtime, &buf, 8);
+	time(&mtime);
+	ptrtime = localtime(&mtime);
+    	printf("%s %s/%s %10d %d-%d-%d %d:%d %s\n", permarr, header->uname,
+	 header->gname, headersize, ptrtime->tm_year + 1900, ptrtime->tm_mon,
+	 ptrtime->tm_mday, ptrtime->tm_hour, ptrtime->tm_min, header->name);
+        lseek(fdTar, headersize, SEEK_CUR);
+    }
+}
+/* ------------------------------- LIST END ------------------------------- */
+
+/* ---------------------------- EXTRACT START ---------------------------- */
+void extract(TarPtr tar, int argc, char **argv, char *opt) {
+    int headSize, fd, extracted, mode, i;
+    TarHeaderPtr header;
+    char *buff;
+
+    if (argc == 3) {
+    	fd = open(tar->tarName, O_RDONLY);
+	    while ((read(fd, header, sizeof(TarHeader))) != 0) {
+	        headSize = strtol(header->size, &buff, 8); 
+	        char buffer[headSize];
+            if (strchr(opt, (int) 'v')) {
+            printf("%s\n", header->name);
+            }
+            if (*(header->typeflag) == '5') {
+            mode = strtol(header->mode, &buff, 8);
+            mkdir(header->name, mode);
+            }
+            extracted = open(header->name, O_WRONLY | O_APPEND | O_CREAT, 0644);
+            if (*(header->typeflag) == '0') {
+            read(fd, buffer, headSize);
+            write(extracted, buffer, headSize);
+            }
+        }
+        close(fd);
+    }
+    else {
+	for (i = 3; i < argc; i++) {
+	    fd = open(tar->tarName, O_RDONLY);
+	    while ((read(fd, &header, sizeof(TarHeader))) != 0) {
+	    	headSize = strtol(header->size, &buff, 8); 
+	    	char buffer[headSize];
+            if (strcmp(argv[i], header->name) == 0) {
+                if (strchr(opt, (int) 'v')) {
+                    printf("%s\n", header->name);
+                }
+                if (*(header->typeflag) == '5') {
+                    mode = strtol(header->mode, &buff, 8);
+                    mkdir(header->name, mode);
+                }
+                extracted = open(header->name, O_WRONLY | O_APPEND | O_CREAT, 0644);
+                if (*(header->typeflag) == '0') {
+                    read(fd, buffer, headSize);
+                    write(extract, buffer, headSize);
+                }
+            }
+	    	else {
+			lseek(fd, headSize, SEEK_CUR);
+	        }
+	    }
+	    close(fd);	    	    
+    	}	
+    }
+}
+/* ----------------------------- EXTRACT END ----------------------------- */
