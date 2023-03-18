@@ -398,71 +398,70 @@ void listV(TarPtr tar) {
     TarHeaderPtr header;
     /*read through tar file*/
     /*name is null terminated*/
-    int fdTar, headersize;
-    char *buf;
+    int fd, headSize;
+    char *buff, permarr[] = "----------";
     int mode;
     long mtime;
     struct tm *ptrtime;
 
-    fdTar = open(tar->tarName, O_RDONLY);
-    if (fdTar < 0) {
-	exit(-1);
+    fd = open(tar->tarName, O_RDONLY);
+    if (fd < 0) {
+	    exit(-1);
     }
-    while ((read(fdTar, &header, sizeof(TarHeader))) != 0) {
-    	char permarr[] = "----------";
+    while ((read(fd, header, sizeof(TarHeader))) != 0) {
         mode = atoi(header->mode);
-	headersize = strtol(header->size, &buf, 8);
-	if (header->typeflag[0] == '5') {
-	    permarr[0] = 'd';
-	}
-	else if (header->typeflag[0] == '2') {
-	    permarr[0] = 'l';
-	}
-
-	if (mode - 400 >= 0) {
-	    permarr[1] = 'r';
-	    mode = mode - 400;
-	}
-	if (mode - 200 >= 0) {
-	    permarr[2] = 'w';
-	    mode = mode - 200;
+        headSize = strtol(header->size, &buff, 8);
+        if (header->typeflag[0] == '5') {
+            permarr[0] = 'd';
         }
-	if (mode - 100 >= 0) {
-	    permarr[3] = 'x';
-	    mode = mode - 100;
-	}
-	if (mode - 40 >= 0) {
-	    permarr[4] = 'r';
-	    mode = mode - 40;
-	}
-	if (mode - 20 >= 0) {
-	    permarr[5] = 'w';
-	    mode = mode - 20;
-	}
-	if (mode - 10 >= 0) {
-	    permarr[6] = 'x';
-	    mode = mode - 10;
- 	}
-	if (mode - 4 >= 0) {
-	    permarr[7] = 'r';
-	    mode = mode - 4;
-	}
-	if (mode - 2 >= 0) {
-	    permarr[8] = 'w';
-	    mode = mode - 2;
-	}
-	if (mode - 1 >= 0) {
-	    permarr[9] = 'x';
-	    mode = mode - 1;
-	} 
-	/*get last modified date*/
-	mtime = strtol(header->mtime, &buf, 8);
-	time(&mtime);
-	ptrtime = localtime(&mtime);
-    	printf("%s %s/%s %10d %d-%d-%d %d:%d %s\n", permarr, header->uname,
-	 header->gname, headersize, ptrtime->tm_year + 1900, ptrtime->tm_mon,
-	 ptrtime->tm_mday, ptrtime->tm_hour, ptrtime->tm_min, header->name);
-        lseek(fdTar, headersize, SEEK_CUR);
+        else if (header->typeflag[0] == '2') {
+            permarr[0] = 'l';
+        }
+
+        if (mode - 400 >= 0) {
+            permarr[1] = 'r';
+            mode = mode - 400;
+        }
+        if (mode - 200 >= 0) {
+            permarr[2] = 'w';
+            mode = mode - 200;
+            }
+        if (mode - 100 >= 0) {
+            permarr[3] = 'x';
+            mode = mode - 100;
+        }
+        if (mode - 40 >= 0) {
+            permarr[4] = 'r';
+            mode = mode - 40;
+        }
+        if (mode - 20 >= 0) {
+            permarr[5] = 'w';
+            mode = mode - 20;
+        }
+        if (mode - 10 >= 0) {
+            permarr[6] = 'x';
+            mode = mode - 10;
+        }
+        if (mode - 4 >= 0) {
+            permarr[7] = 'r';
+            mode = mode - 4;
+        }
+        if (mode - 2 >= 0) {
+            permarr[8] = 'w';
+            mode = mode - 2;
+        }
+        if (mode - 1 >= 0) {
+            permarr[9] = 'x';
+            mode = mode - 1;
+        } 
+        mtime = strtol(header->mtime, &buf, 8);
+        time(&mtime);
+        ptrtime = localtime(&mtime);
+        printf("%s %s/%s ", permarr, header->uname, header->gname);
+        printf("%10d %d-%d-%d ", headSize, ptrtime->tm_year + 1900, 
+                ptrtime->tm_mon, ptrtime->tm_mday);
+        printf("%d:%d %s\n", ptrtime->tm_hour, ptrtime->tm_min, header->name);
+        lseek(fd, headSize, SEEK_CUR);
     }
 }
 /* ------------------------------- LIST END ------------------------------- */
